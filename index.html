@@ -1012,6 +1012,9 @@ function parseSet(raw, displayName) {
 
   if (!arr || !arr.length) throw new Error(`${displayName}: no questions found`);
 
+  const factsMap = (!Array.isArray(data) && data.facts && typeof data.facts === 'object' && !Array.isArray(data.facts))
+    ? data.facts : null;
+
   const questions = [];
   arr.forEach((q, i) => {
     if (!q || typeof q !== 'object') return;
@@ -1024,14 +1027,16 @@ function parseSet(raw, displayName) {
     const question = q.question ?? q.q ?? q.prompt;
     const answerRaw = q.answer ?? q.correct ?? q.correct_answer;
     const explanation = q.answer_explanation ?? q.explanation ?? q.rationale ?? '';
-    const facts = q.facts ?? q.fact ?? q.scenario ?? '';
+    const facts = (q.facts_id && factsMap?.[q.facts_id]) ? factsMap[q.facts_id]
+      : (q.facts ?? q.fact ?? q.scenario ?? '');
     const letter = normalizeLetter(answerRaw, opts);
 
     if (!question || !opts.A || !opts.B || !opts.C || !opts.D || !letter) {
       console.warn(`Skipping malformed question ${i + 1} in ${displayName}`, q);
       return;
     }
-    questions.push({ question, options: opts, answer: letter, explanation, facts });
+    questions.push({ question, options: opts, answer: letter, explanation, facts,
+      id: q.id ?? null, group_id: q.group_id ?? null, group_order: q.group_order ?? null });
   });
 
   if (!questions.length) throw new Error(`${displayName}: no valid questions after parsing`);
@@ -1045,6 +1050,24 @@ function shuffleArray(a) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+function shuffleWithGroups(pool) {
+  const groups = new Map();
+  const standalone = [];
+  for (const q of pool) {
+    if (q.group_id) {
+      if (!groups.has(q.group_id)) groups.set(q.group_id, []);
+      groups.get(q.group_id).push(q);
+    } else {
+      standalone.push(q);
+    }
+  }
+  for (const qs of groups.values()) {
+    qs.sort((a, b) => (a.group_order ?? 0) - (b.group_order ?? 0));
+  }
+  const units = [...standalone.map(q => [q]), ...[...groups.values()]];
+  return shuffleArray(units).flat();
 }
 
 // ============================================
@@ -1339,7 +1362,7 @@ $('start-btn').addEventListener('click', () => {
     s.questions.forEach(q => pool.push({ ...q, setName: s.name }));
   });
   if (!pool.length) return;
-  state.activeQuestions = state.shuffle ? shuffleArray(pool) : pool;
+  state.activeQuestions = state.shuffle ? shuffleWithGroups(pool) : pool;
   state.cursor = 0;
   state.answers = [];
   renderQuestion();
@@ -1518,7 +1541,7 @@ function showResults() {
 }
 
 $('restart-btn').addEventListener('click', () => {
-  state.activeQuestions = state.shuffle ? shuffleArray(state.activeQuestions) : state.activeQuestions;
+  state.activeQuestions = state.shuffle ? shuffleWithGroups(state.activeQuestions) : state.activeQuestions;
   state.cursor = 0;
   state.answers = [];
   renderQuestion();
