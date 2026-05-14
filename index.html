@@ -746,6 +746,96 @@
     white-space: pre-wrap;
   }
 
+  /* === Flag === */
+  .flag-area { margin: 16px 0 8px; }
+
+  .flag-btn {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.15s;
+  }
+  .flag-btn:hover { color: var(--accent); }
+  .flag-btn.flagged { color: var(--accent); }
+
+  .flag-form {
+    margin-top: 10px;
+    padding: 14px 18px;
+    background: var(--tint-faint);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .flag-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .flag-textarea {
+    width: 100%;
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--tint-soft);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .flag-textarea:focus { border-color: var(--ink); background: var(--tint-strong); }
+  .flag-textarea::placeholder { color: var(--muted); opacity: 0.7; }
+
+  .flag-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .flag-submit {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 8px 18px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .flag-submit:hover { background: var(--accent); }
+
+  .flag-cancel {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 0.8rem;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 2px;
+    transition: color 0.15s;
+  }
+  .flag-cancel:hover { color: var(--ink); }
+
+  /* === Final actions === */
   .final-actions {
     display: flex;
     gap: 12px;
@@ -903,6 +993,8 @@
 
     <div id="feedback-container"></div>
 
+    <div class="flag-area" id="flag-area"></div>
+
     <div class="quiz-actions">
       <div class="kbd-hint">
         <kbd>A</kbd><kbd>B</kbd><kbd>C</kbd><kbd>D</kbd> select · <kbd>↵</kbd> confirm
@@ -954,6 +1046,7 @@ const state = {
   timerStart: null,
   timerInterval: null,
   finalTime: 0,
+  flags: {},
 };
 
 let setIdCounter = 0;
@@ -1365,6 +1458,7 @@ $('start-btn').addEventListener('click', () => {
   state.activeQuestions = state.shuffle ? shuffleWithGroups(pool) : pool;
   state.cursor = 0;
   state.answers = [];
+  state.flags = {};
   renderQuestion();
   showView('quiz');
   startTimer();
@@ -1413,6 +1507,77 @@ function renderQuestion() {
   $('feedback-container').innerHTML = '';
   $('action-btn').textContent = 'Submit';
   $('action-btn').disabled = true;
+  renderFlagArea();
+}
+
+function renderFlagArea() {
+  const area = $('flag-area');
+  area.innerHTML = '';
+  const existingFlag = state.flags[state.cursor];
+
+  const btn = document.createElement('button');
+  btn.className = 'flag-btn' + (existingFlag ? ' flagged' : '');
+  btn.id = 'flag-btn';
+  btn.textContent = existingFlag ? 'Flagged ✓' : 'Flag this question';
+  btn.addEventListener('click', toggleFlagForm);
+  area.appendChild(btn);
+
+  const form = document.createElement('div');
+  form.className = 'flag-form';
+  form.id = 'flag-form';
+  form.style.display = 'none';
+  form.innerHTML = `
+    <span class="flag-label">Flag note (optional)</span>
+    <textarea class="flag-textarea" id="flag-note" placeholder="Describe the issue…" maxlength="500" rows="3"></textarea>
+    <div class="flag-form-actions">
+      <button class="flag-submit" id="flag-submit">Submit flag</button>
+      <button class="flag-cancel" id="flag-cancel">Cancel</button>
+    </div>
+  `;
+  if (existingFlag) form.querySelector('#flag-note').value = existingFlag.note;
+  area.appendChild(form);
+
+  form.querySelector('#flag-submit').addEventListener('click', submitFlag);
+  form.querySelector('#flag-cancel').addEventListener('click', () => {
+    $('flag-form').style.display = 'none';
+  });
+}
+
+function toggleFlagForm() {
+  const form = $('flag-form');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+    $('flag-note').focus();
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+async function submitFlag() {
+  const note = $('flag-note').value;
+  const q = state.activeQuestions[state.cursor];
+  const flagData = {
+    note,
+    questionIndex: state.cursor,
+    question: q.question,
+    setName: q.setName,
+    id: q.id,
+    timestamp: new Date().toISOString(),
+  };
+  state.flags[state.cursor] = flagData;
+  $('flag-form').style.display = 'none';
+  const btn = $('flag-btn');
+  btn.textContent = 'Flagged ✓';
+  btn.classList.add('flagged');
+
+  // Fire and forget — UI already updated; don't block on network
+  try {
+    await fetch('/api/flag', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flagData),
+    });
+  } catch (_) {}
 }
 
 function selectOption(letter) {
@@ -1544,6 +1709,7 @@ $('restart-btn').addEventListener('click', () => {
   state.activeQuestions = state.shuffle ? shuffleWithGroups(state.activeQuestions) : state.activeQuestions;
   state.cursor = 0;
   state.answers = [];
+  state.flags = {};
   renderQuestion();
   showView('quiz');
   startTimer();
