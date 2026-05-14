@@ -27,9 +27,12 @@ export default {
 
     // Forward the request with the shared token. We deliberately drop
     // request headers to avoid leaking anything from the browser.
+    // Body is passed through for non-GET/HEAD methods (e.g. POST /api/flag).
+    const hasBody = !["GET", "HEAD"].includes(request.method);
     const proxied = new Request(backend.toString(), {
       method: request.method,
       headers: { Authorization: `Bearer ${env.QUESTIONS_TOKEN}` },
+      body: hasBody ? request.body : undefined,
     });
 
     try {
