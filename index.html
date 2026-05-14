@@ -763,6 +763,7 @@
   }
   .flag-btn:hover { color: var(--accent); }
   .flag-btn.flagged { color: var(--accent); }
+  .flag-btn:disabled { cursor: default; }
 
   .flag-form {
     margin-top: 10px;
@@ -1699,10 +1700,76 @@ function showResults() {
     item.querySelector('[data-field="your"]').textContent = yourText;
     if (!a.correct) item.querySelector('[data-field="correct"]').textContent = correctText;
     if (a.explanation) item.querySelector('[data-field="expl"]').textContent = a.explanation;
+    item.appendChild(buildReviewFlagArea(i));
     list.appendChild(item);
   });
 
   showView('results');
+}
+
+function buildReviewFlagArea(answerIndex) {
+  const area = document.createElement('div');
+  area.className = 'flag-area';
+  const existingFlag = state.flags[answerIndex];
+
+  const btn = document.createElement('button');
+  btn.className = 'flag-btn' + (existingFlag ? ' flagged' : '');
+  btn.textContent = existingFlag ? 'Flagged ✓' : 'Flag this question';
+
+  if (existingFlag) {
+    btn.disabled = true;
+    area.appendChild(btn);
+    return area;
+  }
+
+  const form = document.createElement('div');
+  form.className = 'flag-form';
+  form.style.display = 'none';
+  form.innerHTML = `
+    <span class="flag-label">Flag note (optional)</span>
+    <textarea class="flag-textarea" placeholder="Describe the issue…" maxlength="500" rows="3"></textarea>
+    <div class="flag-form-actions">
+      <button class="flag-submit">Submit flag</button>
+      <button class="flag-cancel">Cancel</button>
+    </div>
+  `;
+
+  btn.addEventListener('click', () => {
+    const open = form.style.display === 'none';
+    form.style.display = open ? 'block' : 'none';
+    if (open) form.querySelector('.flag-textarea').focus();
+  });
+  form.querySelector('.flag-cancel').addEventListener('click', () => {
+    form.style.display = 'none';
+  });
+  form.querySelector('.flag-submit').addEventListener('click', async () => {
+    const note = form.querySelector('.flag-textarea').value;
+    const a = state.answers[answerIndex];
+    const flagData = {
+      note,
+      questionIndex: answerIndex,
+      question: a.question,
+      setName: a.setName,
+      id: state.activeQuestions[answerIndex]?.id ?? null,
+      timestamp: new Date().toISOString(),
+    };
+    state.flags[answerIndex] = flagData;
+    form.style.display = 'none';
+    btn.textContent = 'Flagged ✓';
+    btn.classList.add('flagged');
+    btn.disabled = true;
+    try {
+      await fetch('/api/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(flagData),
+      });
+    } catch (_) {}
+  });
+
+  area.appendChild(btn);
+  area.appendChild(form);
+  return area;
 }
 
 $('restart-btn').addEventListener('click', () => {
