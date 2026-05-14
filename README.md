@@ -10,12 +10,12 @@ Hosted on **Cloudflare Workers** with static assets. The Worker acts as a thin p
 Browser ──► /              (static asset: index.html)
         ──► /api/sets?...  ┐
                             ├── Worker proxies to questions backend
-        ──► /questions/... ┘   (private repo, separate deployment)
+        ──► /questions/... ┘   (separate private deployment)
 ```
 
 The Worker (`src/worker.js`) forwards `/api/sets` and `/questions/*` requests to an authenticated backend specified by two environment secrets:
 
-- `QUESTIONS_URL` — backend's URL (e.g. `https://quizzer-questions.example.workers.dev`)
+- `QUESTIONS_URL` — backend's URL (e.g. `https://my-quizzer-questions.example.workers.dev`)
 - `QUESTIONS_TOKEN` — bearer token shared with the backend
 
 Everything else is served from this repo as static assets. No question content lives in this repo.
@@ -32,32 +32,47 @@ Everything else is served from this repo as static assets. No question content l
 └── .gitignore
 ```
 
-## Cloudflare setup
+## Deploying your own
 
-Connect this repo to a Cloudflare Workers project. The default build/deploy settings work — no Python or build step needed in this repo.
+This app pairs with a [quizzer-questions](https://github.com/j-f-allison/quizzer-questions) backend. The recommended pattern: **fork both repos to private repos**, and deploy from the private forks. This keeps your question content private and keeps your deployment URLs out of any public Git history (Cloudflare's Git integration registers GitHub Deployments visible on whichever repo it's connected to).
 
-**Environment secrets** (Settings → Variables and Secrets, set as **Secret**, not plain variable):
+### 1. Set up the backend
 
-| Name | Value |
-| --- | --- |
-| `QUESTIONS_URL` | Full URL of your questions backend, no trailing slash |
-| `QUESTIONS_TOKEN` | Random 32+ character string, matching `SHARED_TOKEN` in the backend project |
+Follow [quizzer-questions](https://github.com/j-f-allison/quizzer-questions#deploying-your-own)'s deploy instructions. You'll end up with a `SHARED_TOKEN` and a deployed URL like `https://my-quizzer-questions.your-subdomain.workers.dev`.
 
-Every push to `main` triggers a redeploy.
+### 2. Fork this app to a private repo
 
-## Setting up your own backend
+```bash
+# 1. Create a new EMPTY private repo on GitHub (e.g., my-quizzer-app)
 
-This app needs a paired backend that holds the question content. See [quizzer-questions](https://github.com/j-f-allison/quizzer-questions) for the backend code and setup instructions.
+# 2. Locally:
+git clone git@github.com:j-f-allison/quizzer.git my-quizzer-app
+cd my-quizzer-app
+git remote remove origin
+git remote add origin git@github.com:YOURNAME/my-quizzer-app.git
+git remote add upstream git@github.com:j-f-allison/quizzer.git
+git push -u origin main
+```
 
-To use this app with your own content:
+### 3. Connect Cloudflare to the private app fork
 
-1. Fork [quizzer-questions](https://github.com/j-f-allison/quizzer-questions) (keep it private)
-2. Replace the contents of `questions/` with your own JSON files
-3. Deploy it as a Cloudflare Worker
-4. Generate a shared token: `openssl rand -hex 32`
-5. Set `SHARED_TOKEN` in the backend's Cloudflare project
-6. Set `QUESTIONS_URL` and `QUESTIONS_TOKEN` (same token) in this app's Cloudflare project
-7. Push both repos and let Cloudflare deploy
+1. Workers & Pages → Create → Connect to Git → pick your private app fork
+2. Settings → Variables and Secrets → add **two** Secrets:
+   - `QUESTIONS_URL` = your backend's URL (full URL with `https://`, no trailing slash)
+   - `QUESTIONS_TOKEN` = same value as `SHARED_TOKEN` on the backend
+3. Trigger a deploy. Visit the live URL, type a code matching one of your question subdirectories, take a quiz.
+
+## Pulling future updates
+
+When this scaffold gets updates, sync them to your private fork:
+
+```bash
+cd ~/my-quizzer-app
+git fetch upstream
+git merge upstream/main
+git push
+# Cloudflare auto-deploys.
+```
 
 ## JSON format
 
@@ -87,12 +102,10 @@ For multi-code files or display name overrides, use the wrapper format with `_co
 
 ## Local development
 
-You'll need [Wrangler](https://developers.cloudflare.com/workers/wrangler/):
-
 ```bash
 # create a .dev.vars file pointing at your backend (DO NOT commit)
 cat > .dev.vars <<EOF
-QUESTIONS_URL=https://quizzer-questions.your-subdomain.workers.dev
+QUESTIONS_URL=https://my-quizzer-questions.your-subdomain.workers.dev
 QUESTIONS_TOKEN=your-token-here
 EOF
 
