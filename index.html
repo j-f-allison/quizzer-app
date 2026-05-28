@@ -347,6 +347,45 @@
   }
   .selection-summary .count-hl { color: var(--ink); font-weight: 500; }
 
+  .limit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .limit-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .limit-input {
+    width: 80px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--tint-soft);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .limit-input:focus {
+    border-color: var(--ink);
+    background: var(--tint-strong);
+  }
+  .limit-input::-webkit-outer-spin-button,
+  .limit-input::-webkit-inner-spin-button { opacity: 0.4; }
+  .limit-suffix {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
   .radio-group { display: flex; flex-direction: column; gap: 12px; }
   .radio-group label {
     display: flex;
@@ -939,6 +978,19 @@
       <div class="empty-note" id="empty-note">Enter a code above to load question sets — or drop a JSON file below.</div>
       <div class="selection-summary" id="selection-summary" style="display: none;"></div>
 
+      <div class="limit-row" id="limit-row" style="display: none;">
+        <label class="limit-label" for="limit-input">Limit to</label>
+        <input
+          type="number"
+          class="limit-input"
+          id="limit-input"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          placeholder="all">
+        <span class="limit-suffix">questions (optional, balanced across sets)</span>
+      </div>
+
       <div style="margin-top: 18px;">
         <label class="drop-zone" id="drop-zone" for="file-input">
           <div class="main">Or add your own <code>.json</code> file</div>
@@ -1039,6 +1091,7 @@ const state = {
   sets: [],           // [{id, name, questions, enabled, bundled}, ...]
   mode: 'end',
   shuffle: false,
+  targetCount: null,
   activeQuestions: [],
   cursor: 0,
   answers: [],
@@ -1146,10 +1199,12 @@ function shuffleArray(a) {
   return arr;
 }
 
-function shuffleWithGroups(pool) {
+// Split a question list into "units": each group is one unit (kept together,
+// in group_order), each standalone question is its own unit.
+function questionsToUnits(questions) {
   const groups = new Map();
   const standalone = [];
-  for (const q of pool) {
+  for (const q of questions) {
     if (q.group_id) {
       if (!groups.has(q.group_id)) groups.set(q.group_id, []);
       groups.get(q.group_id).push(q);
@@ -1160,8 +1215,37 @@ function shuffleWithGroups(pool) {
   for (const qs of groups.values()) {
     qs.sort((a, b) => (a.group_order ?? 0) - (b.group_order ?? 0));
   }
-  const units = [...standalone.map(q => [q]), ...[...groups.values()]];
-  return shuffleArray(units).flat();
+  return [...standalone.map(q => [q]), ...[...groups.values()]];
+}
+
+function shuffleWithGroups(pool) {
+  return shuffleArray(questionsToUnits(pool)).flat();
+}
+
+// Balanced sample across multiple sets. Each set contributes units (groups
+// kept intact). We round-robin across sets — picking one shuffled unit at a
+// time from each — until we hit or just exceed `target`. Groups that push the
+// count over `target` are kept whole.
+function buildBalancedPool(enabledSets, target) {
+  const perSet = enabledSets.map(s => {
+    const units = questionsToUnits(s.questions.map(q => ({ ...q, setName: s.name })));
+    return shuffleArray(units);
+  });
+  const picked = [];
+  let count = 0;
+  let progress = true;
+  while (count < target && progress) {
+    progress = false;
+    for (const units of perSet) {
+      if (count >= target) break;
+      const unit = units.shift();
+      if (!unit) continue;
+      picked.push(unit);
+      count += unit.length;
+      progress = true;
+    }
+  }
+  return shuffleArray(picked).flat();
 }
 
 // ============================================
@@ -1351,14 +1435,23 @@ function updateStartButton() {
 
 function updateSelectionSummary() {
   const summary = $('selection-summary');
+  const limitRow = $('limit-row');
   const enabledSets = state.sets.filter(s => s.enabled);
   const totalQ = enabledSets.reduce((n, s) => n + s.questions.length, 0);
   if (!state.sets.length || !totalQ) {
     summary.style.display = 'none';
+    limitRow.style.display = 'none';
     return;
   }
+  limitRow.style.display = 'flex';
+  $('limit-input').max = totalQ;
   summary.style.display = 'block';
-  summary.innerHTML = `Selected: <span class="count-hl">${enabledSets.length}</span> set${enabledSets.length === 1 ? '' : 's'} · <span class="count-hl">${totalQ}</span> question${totalQ === 1 ? '' : 's'}`;
+  const target = state.targetCount;
+  const showingTarget = target && target < totalQ;
+  const base = `Selected: <span class="count-hl">${enabledSets.length}</span> set${enabledSets.length === 1 ? '' : 's'} · <span class="count-hl">${totalQ}</span> question${totalQ === 1 ? '' : 's'}`;
+  summary.innerHTML = showingTarget
+    ? `${base} · using ~<span class="count-hl">${target}</span> (balanced)`
+    : base;
 }
 
 // ============================================
@@ -1433,6 +1526,12 @@ document.querySelectorAll('input[name="mode"]').forEach(el => {
 });
 $('shuffle-check').addEventListener('change', (e) => { state.shuffle = e.target.checked; });
 
+$('limit-input').addEventListener('input', (e) => {
+  const v = parseInt(e.target.value, 10);
+  state.targetCount = (!isNaN(v) && v > 0) ? v : null;
+  updateSelectionSummary();
+});
+
 // Code input
 $('code-input').addEventListener('input', (e) => {
   $('code-btn').disabled = !e.target.value.trim();
@@ -1451,12 +1550,24 @@ $('code-btn').addEventListener('click', () => {
 // Quiz flow
 // ============================================
 $('start-btn').addEventListener('click', () => {
-  const pool = [];
-  state.sets.filter(s => s.enabled).forEach(s => {
-    s.questions.forEach(q => pool.push({ ...q, setName: s.name }));
-  });
-  if (!pool.length) return;
-  state.activeQuestions = state.shuffle ? shuffleWithGroups(pool) : pool;
+  const enabledSets = state.sets.filter(s => s.enabled);
+  const totalQ = enabledSets.reduce((n, s) => n + s.questions.length, 0);
+  if (!totalQ) return;
+
+  const target = state.targetCount;
+  let active;
+  if (target && target < totalQ) {
+    // Balanced random sample across sets — keeps groups intact, may slightly
+    // overshoot `target` when the last unit picked is a group.
+    active = buildBalancedPool(enabledSets, target);
+  } else {
+    const pool = [];
+    enabledSets.forEach(s => {
+      s.questions.forEach(q => pool.push({ ...q, setName: s.name }));
+    });
+    active = state.shuffle ? shuffleWithGroups(pool) : pool;
+  }
+  state.activeQuestions = active;
   state.cursor = 0;
   state.answers = [];
   state.flags = {};
