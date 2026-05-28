@@ -962,6 +962,10 @@
         <input type="checkbox" id="shuffle-check">
         <span>Shuffle question order</span>
       </label>
+      <label class="check-row">
+        <input type="checkbox" id="hide-set-check">
+        <span>Hide set name</span>
+      </label>
     </section>
 
     <button class="btn-primary" id="start-btn" disabled>Begin</button>
@@ -1030,6 +1034,7 @@ const state = {
   sets: [],           // [{id, name, questions, enabled}, ...]
   mode: 'end',
   shuffle: false,
+  hideSetName: false,
   targetCount: null,
   activeQuestions: [],
   cursor: 0,
@@ -1408,6 +1413,7 @@ document.querySelectorAll('input[name="mode"]').forEach(el => {
   el.addEventListener('change', (e) => { state.mode = e.target.value; });
 });
 $('shuffle-check').addEventListener('change', (e) => { state.shuffle = e.target.checked; });
+$('hide-set-check').addEventListener('change', (e) => { state.hideSetName = e.target.checked; });
 
 $('limit-input').addEventListener('input', (e) => {
   const v = parseInt(e.target.value, 10);
@@ -1474,7 +1480,14 @@ function renderQuestion() {
 
   $('progress-text').textContent = `Question ${state.cursor + 1} of ${total}`;
   $('progress-fill').style.width = `${((state.cursor) / total) * 100}%`;
-  $('set-tag').textContent = q.setName;
+  const setTagEl = $('set-tag');
+  if (state.hideSetName) {
+    setTagEl.textContent = '';
+    setTagEl.style.display = 'none';
+  } else {
+    setTagEl.textContent = q.setName;
+    setTagEl.style.display = '';
+  }
 
   const factsEl = $('facts-text');
   if (q.facts) {
