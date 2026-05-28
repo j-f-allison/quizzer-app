@@ -156,37 +156,6 @@
   }
 
   /* === Start view === */
-  .drop-zone {
-    display: block;
-    border: 1.5px dashed var(--border);
-    border-radius: 4px;
-    padding: 28px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    background: var(--tint-faint);
-    margin-bottom: 10px;
-  }
-  .drop-zone:hover, .drop-zone.drag {
-    border-color: var(--accent);
-    background: var(--tint-soft);
-  }
-  .drop-zone .main {
-    font-family: "Fraunces", serif;
-    font-size: 1.05rem;
-    color: var(--ink);
-    margin-bottom: 4px;
-  }
-  .drop-zone .sub {
-    font-size: 0.82rem;
-    color: var(--muted);
-  }
-  .drop-zone .browse {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
   .error {
     color: var(--accent);
     font-size: 0.88rem;
@@ -237,34 +206,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .set-list .tag {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .set-list .tag.bundled { color: var(--accent-soft); }
   .set-list .count {
     font-family: "JetBrains Mono", monospace;
     font-size: 0.78rem;
     color: var(--muted);
     flex-shrink: 0;
   }
-  .set-list .remove {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 6px 8px;
-    font-size: 1.1rem;
-    line-height: 1;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-  .set-list .remove:hover { color: var(--accent); }
-  .remove-placeholder { width: 30px; flex-shrink: 0; }
 
   .empty-note {
     color: var(--muted);
@@ -975,7 +922,7 @@
       <div class="code-status" id="code-status"></div>
 
       <ul class="set-list" id="set-list"></ul>
-      <div class="empty-note" id="empty-note">Enter a code above to load question sets — or drop a JSON file below.</div>
+      <div class="empty-note" id="empty-note">Enter a code above to load question sets.</div>
       <div class="selection-summary" id="selection-summary" style="display: none;"></div>
 
       <div class="limit-row" id="limit-row" style="display: none;">
@@ -991,14 +938,6 @@
         <span class="limit-suffix">questions (optional, balanced across sets)</span>
       </div>
 
-      <div style="margin-top: 18px;">
-        <label class="drop-zone" id="drop-zone" for="file-input">
-          <div class="main">Or add your own <code>.json</code> file</div>
-          <div class="sub">drag and drop, or <span class="browse">browse</span></div>
-        </label>
-        <input type="file" id="file-input" multiple accept=".json,application/json" hidden>
-        <div class="error" id="load-error"></div>
-      </div>
     </section>
 
     <section>
@@ -1088,7 +1027,7 @@ const QUESTIONS_DIR = 'questions/';
 // State
 // ============================================
 const state = {
-  sets: [],           // [{id, name, questions, enabled, bundled}, ...]
+  sets: [],           // [{id, name, questions, enabled}, ...]
   mode: 'end',
   shuffle: false,
   targetCount: null,
@@ -1326,9 +1265,8 @@ async function applyCode(rawCode) {
     return;
   }
 
-  // Always remove existing bundled sets — we're replacing them with this
-  // code's matches (or with nothing, if there were none).
-  state.sets = state.sets.filter(s => !s.bundled);
+  // Replace existing sets with this code's matches (or nothing, if none).
+  state.sets = [];
 
   if (matches.length === 0) {
     status.classList.add('error');
@@ -1358,7 +1296,6 @@ async function applyCode(rawCode) {
         name: entry.name,
         questions,
         enabled: false,   // start unchecked
-        bundled: true,
       });
     } catch (e) {
       errors.push(`${entry.name}: ${e.message}`);
@@ -1398,23 +1335,16 @@ function renderSetList() {
     empty.style.display = 'none';
     toggleBtn.style.display = state.sets.length >= 2 ? 'inline-block' : 'none';
 
-    // Bundled first, then uploaded
-    const sorted = [...state.sets].sort((a, b) => (b.bundled ? 1 : 0) - (a.bundled ? 1 : 0));
-    sorted.forEach(s => {
+    state.sets.forEach(s => {
       const li = document.createElement('li');
       li.innerHTML = `
         <label class="set-check">
           <input type="checkbox" data-id="${s.id}" ${s.enabled ? 'checked' : ''}>
           <div class="name-col">
             <span class="name"></span>
-            <span class="tag ${s.bundled ? 'bundled' : 'uploaded'}">${s.bundled ? 'bundled' : 'uploaded'}</span>
           </div>
           <span class="count">${s.questions.length} q</span>
         </label>
-        ${s.bundled
-          ? '<span class="remove-placeholder"></span>'
-          : `<button class="remove" data-remove="${s.id}" title="Remove">×</button>`
-        }
       `;
       li.querySelector('.name').textContent = s.name;
       list.appendChild(li);
@@ -1454,44 +1384,6 @@ function updateSelectionSummary() {
     : base;
 }
 
-// ============================================
-// File upload
-// ============================================
-async function handleFiles(fileList) {
-  $('load-error').textContent = '';
-  const errors = [];
-  for (const f of fileList) {
-    try {
-      const text = await f.text();
-      const questions = parseSet(text, f.name);
-      const existing = state.sets.findIndex(s => s.name === f.name && !s.bundled);
-      const entry = { id: ++setIdCounter, name: f.name, questions, enabled: true, bundled: false };
-      if (existing >= 0) state.sets[existing] = entry;
-      else state.sets.push(entry);
-    } catch (e) {
-      errors.push(e.message);
-    }
-  }
-  if (errors.length) $('load-error').textContent = errors.join('  ·  ');
-  renderSetList();
-}
-
-$('file-input').addEventListener('change', (e) => {
-  handleFiles(e.target.files);
-  e.target.value = '';
-});
-
-const dz = $('drop-zone');
-['dragenter', 'dragover'].forEach(evt => {
-  dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.add('drag'); });
-});
-['dragleave', 'drop'].forEach(evt => {
-  dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.remove('drag'); });
-});
-dz.addEventListener('drop', (e) => {
-  if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files);
-});
-
 $('set-list').addEventListener('change', (e) => {
   const id = parseInt(e.target.dataset.id, 10);
   if (!isNaN(id)) {
@@ -1506,15 +1398,6 @@ $('set-list').addEventListener('change', (e) => {
     }
   }
 });
-$('set-list').addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-remove]');
-  if (btn) {
-    const id = parseInt(btn.dataset.remove, 10);
-    state.sets = state.sets.filter(s => s.id !== id);
-    renderSetList();
-  }
-});
-
 $('toggle-all-btn').addEventListener('click', () => {
   const allOn = state.sets.every(s => s.enabled);
   state.sets.forEach(s => { s.enabled = !allOn; });
