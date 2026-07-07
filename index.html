@@ -466,6 +466,17 @@
     margin-bottom: 12px;
   }
 
+  .image-block {
+    margin-bottom: 28px;
+  }
+  .image-block img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    border: 1px solid var(--border-soft);
+  }
+
   .facts {
     background: var(--tint-facts);
     padding: 20px 24px 22px;
@@ -675,6 +686,16 @@
   }
   .review-num .status.correct { background: var(--correct-bg); color: var(--correct); }
   .review-num .status.wrong { background: var(--wrong-bg); color: var(--wrong); }
+  .review-image {
+    margin-bottom: 14px;
+  }
+  .review-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    border: 1px solid var(--border-soft);
+  }
   .review-facts {
     background: var(--tint-facts-review);
     padding: 14px 16px 16px;
@@ -983,6 +1004,7 @@
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
 
     <div class="set-tag" id="set-tag"></div>
+    <div class="image-block" id="image-block" style="display: none;"><img id="question-image" alt="Question diagram"></div>
     <div class="facts" id="facts-text" style="display: none;"></div>
     <div class="question" id="question-text"></div>
     <div class="options-grid" id="options-grid"></div>
@@ -1026,6 +1048,10 @@
 // ============================================
 const SETS_API = '/api/sets';
 const QUESTIONS_DIR = 'questions/';
+
+function resolveAssetUrl(path) {
+  return /^https?:/i.test(path) ? path : QUESTIONS_DIR + path;
+}
 
 // ============================================
 // State
@@ -1120,13 +1146,14 @@ function parseSet(raw, displayName) {
     const explanation = q.answer_explanation ?? q.explanation ?? q.rationale ?? '';
     const facts = (q.facts_id && factsMap?.[q.facts_id]) ? factsMap[q.facts_id]
       : (q.facts ?? q.fact ?? q.scenario ?? '');
+    const image = q.image ?? q.image_url ?? q.img ?? '';
     const letter = normalizeLetter(answerRaw, opts);
 
     if (!question || !opts.A || !opts.B || !opts.C || !opts.D || !letter) {
       console.warn(`Skipping malformed question ${i + 1} in ${displayName}`, q);
       return;
     }
-    questions.push({ question, options: opts, answer: letter, explanation, facts,
+    questions.push({ question, options: opts, answer: letter, explanation, facts, image,
       id: q.id ?? null, group_id: q.group_id ?? null, group_order: q.group_order ?? null });
   });
 
@@ -1289,7 +1316,7 @@ async function applyCode(rawCode) {
       if (setCache.has(entry.file)) {
         questions = setCache.get(entry.file);
       } else {
-        const url = /^https?:/i.test(entry.file) ? entry.file : QUESTIONS_DIR + entry.file;
+        const url = resolveAssetUrl(entry.file);
         const r = await fetch(url, { cache: 'no-cache' });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
@@ -1489,6 +1516,16 @@ function renderQuestion() {
     setTagEl.style.display = '';
   }
 
+  const imageBlockEl = $('image-block');
+  const imageEl = $('question-image');
+  if (q.image) {
+    imageEl.src = resolveAssetUrl(q.image);
+    imageBlockEl.style.display = 'block';
+  } else {
+    imageEl.src = '';
+    imageBlockEl.style.display = 'none';
+  }
+
   const factsEl = $('facts-text');
   if (q.facts) {
     factsEl.textContent = q.facts;
@@ -1608,6 +1645,7 @@ function submitAnswer() {
     correct,
     explanation: q.explanation,
     facts: q.facts,
+    image: q.image,
     setName: q.setName,
   });
   state.answered = true;
@@ -1694,6 +1732,7 @@ function showResults() {
         Q${i + 1}
         <span class="status ${a.correct ? 'correct' : 'wrong'}">${a.correct ? 'CORRECT' : 'INCORRECT'}</span>
       </div>
+      ${a.image ? `<div class="review-image" data-field="image"><img data-field="image-img" alt="Question diagram"></div>` : ''}
       ${a.facts ? `<div class="review-facts" data-field="facts"></div>` : ''}
       <div class="review-q"></div>
       <div class="review-answers">
@@ -1702,6 +1741,7 @@ function showResults() {
       </div>
       ${a.explanation ? `<div class="review-expl" data-field="expl"></div>` : ''}
     `;
+    if (a.image) item.querySelector('[data-field="image-img"]').src = resolveAssetUrl(a.image);
     if (a.facts) item.querySelector('[data-field="facts"]').textContent = a.facts;
     item.querySelector('.review-q').textContent = a.question;
     item.querySelector('[data-field="your"]').textContent = yourText;
