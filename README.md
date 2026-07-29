@@ -105,8 +105,38 @@ A plain `python3 -m http.server` will serve the static files but the API calls w
 - **Timer** — counts up from start
 - **Dark mode** — toggle in top-right corner, persists across sessions
 - **Keyboard shortcuts** — `A` / `B` / `C` / `D` to select, `Enter` to submit/advance
-- **File upload** — drop a JSON file directly to use without going through the backend
+- **Examplified mode** — see below
+
+## Examplified mode
+
+Checking **Examplified** on the start screen runs the same question set through a
+reproduction of the ExamSoft/Examplify exam interface, for practising in the UI
+the real exam uses. It swaps in a separate full-screen view (`#view-exam`) with:
+
+- the two-row dark exam chrome, left question navigator, stadium answer pills,
+  and blue Previous/Next footer
+- **free navigation** — go back to any question and change your answer
+- **flag for review** — flags show as badges in the navigator; `FILTER` narrows
+  the navigator to unanswered or flagged questions
+- **cross out answers** — the eye icon on each row dims and strikes a choice
+- **highlighter and eraser** — drag over the fact pattern or question to
+  highlight; highlights persist for the session
+- **Tool Kit panel** — per-question notes, the highlighter/eraser tools, and a
+  basic calculator
+- **Submit Exam** — the confirmation screen, then the normal results view
+
+Deliberate departures from Examplify: the timer counts **up** (`TIME ELAPSED`)
+since Study Hall has no time-limit concept, results *are* shown after
+submitting, and Exam Controls has an **Exit without submitting** escape hatch.
+Quizzer features with no Examplify equivalent — the progress bar, keyboard
+hints, immediate feedback, dark mode, and the content-error flag form — are
+hidden in this mode. Content errors can still be reported from the results
+screen afterwards.
 
 ## Customization
 
 CSS variables are defined at the top of `index.html` inside `:root` (light theme) and `[data-theme="dark"]` (dark theme). All colors flow from there.
+
+The `--ex-*` variables are the exception: they are the Examplified palette and
+are intentionally defined only in `:root`, because that mode reproduces an
+interface that has no dark theme.

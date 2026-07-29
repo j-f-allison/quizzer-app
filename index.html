@@ -38,6 +38,36 @@
     --tint-facts-review: rgba(0, 0, 0, 0.03);
     --bg-grad-1: rgba(122, 30, 38, 0.02);
     --bg-grad-2: rgba(28, 27, 24, 0.025);
+
+    /* Examplified (exam mode) palette.
+       Deliberately NOT duplicated in [data-theme="dark"]: the whole point of
+       exam mode is matching ExamSoft, which has no dark theme. Still routed
+       through variables so no rule hardcodes a colour. */
+    --ex-chrome: #263544;
+    --ex-chrome-2: #33424f;
+    --ex-chrome-ink: #eef2f5;
+    --ex-chrome-muted: #9dabb7;
+    --ex-chrome-line: #46545f;
+    --ex-rail: #e6e7ee;
+    --ex-rail-ink: #8a8f9c;
+    --ex-canvas: #f1f1f0;
+    --ex-ink: #333333;
+    --ex-ink-soft: #4a4a4a;
+    --ex-muted: #8a8f96;
+    --ex-white: #ffffff;
+    --ex-pill-bg: #fafafa;
+    --ex-pill-border: #c9c9cc;
+    --ex-pill-hover: #f2f2f2;
+    --ex-blue: #2f7dd1;
+    --ex-blue-hover: #2a6fba;
+    --ex-blue-ink: #ffffff;
+    --ex-footer: #eceef2;
+    --ex-footer-line: #d8dce2;
+    --ex-flag: #e8703a;
+    --ex-highlight: #ffef9e;
+    --ex-submit-bg: #b3dde3;
+    --ex-panel-border: #b9c6d6;
+    --ex-shadow: rgba(0, 0, 0, 0.18);
   }
 
   [data-theme="dark"] {
@@ -886,6 +916,699 @@
   [data-theme="dark"] .theme-toggle .icon-sun { display: none; }
   [data-theme="dark"] .theme-toggle .icon-moon { display: block; }
 
+  /* ==========================================================
+     Examplified (exam mode)
+     A faithful reproduction of the ExamSoft/Examplify exam UI.
+     Lives in its own full-viewport view (#view-exam) rather than
+     skinning #view-quiz — the two layouts share nothing.
+     ========================================================== */
+
+  body.exam-mode { overflow: hidden; }
+  body.exam-mode .theme-toggle { display: none; }
+
+  #view-exam,
+  #view-exam-submit {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ex-ink);
+    animation: none;
+  }
+  #view-exam [hidden],
+  #view-exam-submit [hidden] { display: none !important; }
+
+  #view-exam.active {
+    display: grid;
+    position: fixed;
+    inset: 0;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    background: var(--ex-canvas);
+    z-index: 50;
+  }
+
+  /* --- Header row 1 --- */
+  .ex-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--ex-chrome);
+    color: var(--ex-chrome-ink);
+    padding: 0 16px;
+    height: 38px;
+    font-size: 0.74rem;
+  }
+  .ex-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+  .ex-brand-mark { color: var(--ex-blue); font-size: 0.85rem; }
+  .ex-topbar-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--ex-chrome-line);
+    flex-shrink: 0;
+  }
+  .ex-exam-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ex-chrome-ink);
+  }
+
+  /* --- Header row 2 --- */
+  .ex-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ex-chrome-2);
+    color: var(--ex-chrome-ink);
+    padding: 0 16px;
+    height: 34px;
+    font-size: 0.72rem;
+  }
+  .ex-toolbar-spacer { flex: 1; }
+  .ex-timer-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    letter-spacing: 0.06em;
+    color: var(--ex-chrome-ink);
+    flex-shrink: 0;
+  }
+  .ex-timer-label { color: var(--ex-chrome-muted); }
+  .ex-timer { font-variant-numeric: tabular-nums; }
+
+  .ex-chrome-btn {
+    background: none;
+    border: none;
+    color: var(--ex-chrome-ink);
+    font: inherit;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    padding: 6px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .ex-chrome-btn:hover { color: var(--ex-white); }
+  .ex-chrome-btn .ex-caret,
+  .ex-chrome-btn .ex-kebab { color: var(--ex-chrome-muted); }
+  .ex-filter-btn { letter-spacing: 0.08em; color: var(--ex-chrome-muted); }
+  .ex-qjump-btn { letter-spacing: 0; font-size: 0.78rem; }
+
+  .ex-flag-pill {
+    background: none;
+    border: 1px solid var(--ex-chrome-muted);
+    border-radius: 999px;
+    color: var(--ex-chrome-ink);
+    font: inherit;
+    letter-spacing: 0.07em;
+    padding: 4px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ex-flag-pill:hover { border-color: var(--ex-white); }
+  .ex-flag-pill.flagged {
+    border-color: var(--ex-flag);
+    color: var(--ex-flag);
+  }
+
+  .ex-tool-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--ex-chrome-muted);
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+  }
+  .ex-tool-btn svg { width: 16px; height: 16px; display: block; }
+  .ex-tool-btn:hover { color: var(--ex-chrome-ink); }
+  .ex-tool-btn.active {
+    color: var(--ex-chrome-ink);
+    border-color: var(--ex-chrome-muted);
+    background: var(--ex-chrome);
+  }
+  .ex-tool-btn.ex-hl-icon { color: var(--ex-highlight); }
+
+  /* --- Dropdown menus --- */
+  .ex-menu-wrap { position: relative; display: flex; align-items: center; }
+  .ex-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 190px;
+    background: var(--ex-white);
+    border: 1px solid var(--ex-footer-line);
+    box-shadow: 0 6px 18px var(--ex-shadow);
+    padding: 4px 0;
+    z-index: 30;
+  }
+  .ex-menu.align-right { left: auto; right: 0; }
+  .ex-menu-scroll { max-height: 320px; overflow-y: auto; }
+  .ex-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--ex-ink);
+    padding: 9px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ex-menu-item:hover { background: var(--ex-footer); }
+  .ex-menu-item.current { font-weight: 600; }
+  .ex-menu-sep { height: 1px; background: var(--ex-footer-line); margin: 4px 0; }
+
+  /* --- Body: rail | content | toolkit --- */
+  .ex-body {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+
+  .ex-rail {
+    background: var(--ex-rail);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    padding: 4px 0;
+  }
+  .ex-rail-chev {
+    background: none;
+    border: none;
+    color: var(--ex-rail-ink);
+    cursor: pointer;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .ex-rail-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    width: 100%;
+  }
+  .ex-rail-scroll::-webkit-scrollbar { display: none; }
+  .ex-rail-num {
+    position: relative;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--ex-rail-ink);
+    font: inherit;
+    font-size: 0.76rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ex-rail-num:hover { color: var(--ex-ink); }
+  .ex-rail-num.current {
+    border-color: var(--ex-rail-ink);
+    color: var(--ex-ink);
+  }
+  .ex-rail-num.answered::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ex-rail-ink);
+  }
+  .ex-rail-flag {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--ex-flag);
+    color: var(--ex-white);
+    font-size: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- Content pane ---
+     The column wrapper is the positioning context so the ••• menu stays
+     pinned while .ex-content scrolls underneath it. */
+  .ex-content-col {
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+  }
+  .ex-content {
+    min-width: 0;
+    overflow-y: auto;
+    padding: 16px 44px 64px 30px;
+    background: var(--ex-canvas);
+  }
+  .ex-overflow-wrap {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    z-index: 5;
+  }
+  .ex-overflow {
+    background: none;
+    border: none;
+    color: var(--ex-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    padding: 4px 6px;
+  }
+  .ex-overflow:hover { color: var(--ex-ink); }
+
+  .ex-question-pane { max-width: 1100px; }
+  .ex-question-pane[hidden] { display: none !important; }
+  .ex-facts,
+  .ex-question {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ex-ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin-bottom: 14px;
+  }
+  .ex-facts:empty,
+  .ex-question:empty { display: none; }
+  .ex-image { margin: 12px 0 16px; }
+  .ex-image img {
+    max-width: 100%;
+    max-height: 46vh;
+    display: block;
+    border: 1px solid var(--ex-pill-border);
+    background: var(--ex-white);
+  }
+
+  mark.ex-hl {
+    background: var(--ex-highlight);
+    color: inherit;
+    padding: 0;
+  }
+  .ex-content.tool-highlight [data-highlightable],
+  .ex-content.tool-erase [data-highlightable] { cursor: text; }
+
+  .ex-answers-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--ex-ink-soft);
+    margin: 20px 0 12px;
+  }
+
+  .ex-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 1100px;
+  }
+  .ex-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+    padding: 8px 16px 8px 8px;
+    border: 1px solid var(--ex-pill-border);
+    border-radius: 999px;
+    background: var(--ex-pill-bg);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .ex-option:hover { background: var(--ex-pill-hover); }
+  .ex-option:focus-visible {
+    outline: 2px solid var(--ex-blue);
+    outline-offset: 2px;
+  }
+  .ex-option-letter {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--ex-ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .ex-option:hover .ex-option-letter {
+    border-color: var(--ex-pill-border);
+    background: var(--ex-white);
+  }
+  .ex-option.selected {
+    border-color: var(--ex-blue);
+    box-shadow: 0 0 0 1px var(--ex-blue);
+  }
+  .ex-option.selected .ex-option-letter {
+    background: var(--ex-blue);
+    border-color: var(--ex-blue);
+    color: var(--ex-blue-ink);
+  }
+  .ex-option-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--ex-ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .ex-option-eye {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--ex-muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+  }
+  .ex-option-eye svg { width: 17px; height: 17px; display: block; }
+  .ex-option-eye:hover { color: var(--ex-ink); }
+  .ex-option.struck { opacity: 0.5; }
+  .ex-option.struck .ex-option-text { text-decoration: line-through; }
+  .ex-option.struck .ex-option-eye { color: var(--ex-ink); }
+
+  /* --- Tool Kit panel --- */
+  .ex-toolkit {
+    width: 330px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--ex-canvas);
+    border-left: 1px solid var(--ex-footer-line);
+  }
+  .ex-toolkit-tabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--ex-footer-line);
+  }
+  .ex-toolkit-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--ex-muted);
+    padding: 10px 4px;
+    cursor: pointer;
+  }
+  .ex-toolkit-tab:hover { color: var(--ex-ink); }
+  .ex-toolkit-tab.active {
+    color: var(--ex-ink);
+    border-bottom-color: var(--ex-blue);
+  }
+  .ex-toolkit-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  .ex-notes {
+    flex: 1;
+    min-height: 240px;
+    width: 100%;
+    resize: none;
+    border: 1px solid var(--ex-panel-border);
+    background: var(--ex-canvas);
+    font: inherit;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--ex-ink);
+    padding: 10px 12px;
+  }
+  .ex-notes:focus { outline: 1px solid var(--ex-blue); }
+  .ex-toolkit-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.72rem;
+    color: var(--ex-ink-soft);
+    padding: 12px;
+    cursor: pointer;
+  }
+  .ex-toolkit-close:hover { text-decoration: underline; }
+
+  .ex-tool-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: var(--ex-white);
+    border: 1px solid var(--ex-pill-border);
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--ex-ink);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .ex-tool-row:hover { background: var(--ex-pill-hover); }
+  .ex-tool-row.active {
+    border-color: var(--ex-blue);
+    box-shadow: 0 0 0 1px var(--ex-blue);
+  }
+  .ex-tool-row svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .ex-calc-display {
+    background: var(--ex-white);
+    border: 1px solid var(--ex-pill-border);
+    padding: 14px 12px;
+    font-size: 1.4rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 8px;
+  }
+  .ex-calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .ex-calc-grid button {
+    background: var(--ex-white);
+    border: 1px solid var(--ex-pill-border);
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ex-ink);
+    padding: 12px 0;
+    cursor: pointer;
+  }
+  .ex-calc-grid button:hover { background: var(--ex-pill-hover); }
+  .ex-calc-grid button.op { color: var(--ex-blue); }
+
+  /* --- Footer --- */
+  .ex-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--ex-footer);
+    border-top: 1px solid var(--ex-footer-line);
+    padding: 8px 18px;
+    height: 46px;
+  }
+  .ex-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 0.62rem;
+    letter-spacing: 0.07em;
+    color: var(--ex-muted);
+    text-transform: uppercase;
+    min-width: 0;
+  }
+  .ex-footer-right { display: flex; align-items: center; gap: 10px; }
+  .ex-btn-prev,
+  .ex-btn-next {
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 7px 26px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .ex-btn-prev {
+    background: var(--ex-footer);
+    border-color: var(--ex-footer-line);
+    color: var(--ex-ink-soft);
+  }
+  .ex-btn-prev:hover { background: var(--ex-white); }
+  .ex-btn-next {
+    background: var(--ex-blue);
+    color: var(--ex-blue-ink);
+  }
+  .ex-btn-next:hover { background: var(--ex-blue-hover); }
+
+  /* --- Hide Exam overlay --- */
+  .ex-hide-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--ex-chrome);
+    color: var(--ex-chrome-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .ex-hide-overlay[hidden] { display: none; }
+
+  /* --- Submit screen --- */
+  #view-exam-submit.active {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--ex-submit-bg);
+    overflow-y: auto;
+  }
+  .ex-submit-strip {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ex-ink);
+    padding: 18px 20px 0;
+  }
+  .ex-submit-cards {
+    display: flex;
+    justify-content: center;
+    margin: 12vh auto 0;
+    max-width: 640px;
+    background: var(--ex-canvas);
+    box-shadow: 0 2px 10px var(--ex-shadow);
+  }
+  .ex-submit-card {
+    flex: 1;
+    padding: 26px 24px 30px;
+    text-align: center;
+  }
+  .ex-submit-card + .ex-submit-card { border-left: 1px solid var(--ex-footer-line); }
+  .ex-submit-card h3 {
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--ex-ink);
+    margin: 0 0 14px;
+  }
+  .ex-submit-card p {
+    font-size: 0.76rem;
+    line-height: 1.5;
+    color: var(--ex-ink-soft);
+    margin: 0 0 20px;
+  }
+  .ex-submit-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    justify-content: center;
+    font-size: 0.74rem;
+    color: var(--ex-ink-soft);
+    margin-bottom: 18px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .ex-submit-confirm input { margin: 2px 0 0; flex-shrink: 0; }
+  .ex-submit-btn {
+    border-radius: 999px;
+    border: 1px solid var(--ex-pill-border);
+    background: var(--ex-pill-bg);
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--ex-ink-soft);
+    padding: 8px 26px;
+    cursor: pointer;
+  }
+  .ex-submit-btn:hover:not(:disabled) { background: var(--ex-white); }
+  .ex-submit-btn:disabled { opacity: 0.5; cursor: default; }
+  .ex-submit-btn.go {
+    background: var(--ex-blue);
+    border-color: var(--ex-blue);
+    color: var(--ex-blue-ink);
+  }
+  .ex-submit-btn.go:hover:not(:disabled) { background: var(--ex-blue-hover); }
+  .ex-submit-foot {
+    text-align: center;
+    margin: 8vh 0 24px;
+    font-size: 0.7rem;
+    color: var(--ex-ink-soft);
+  }
+  .ex-submit-foot span {
+    display: inline-block;
+    background: var(--ex-canvas);
+    border-radius: 999px;
+    padding: 6px 18px;
+  }
+
+  /* Exam mode below tablet width: drop the rail, overlay the toolkit, and let
+     the toolbar scroll sideways rather than clipping its controls. */
+  @media (max-width: 860px) {
+    .ex-body { grid-template-columns: minmax(0, 1fr); }
+    .ex-rail { display: none; }
+    .ex-content { padding: 14px 16px 56px; }
+    .ex-toolkit {
+      position: fixed;
+      inset: 72px 0 46px;
+      width: auto;
+      z-index: 40;
+      border-left: none;
+      box-shadow: 0 -2px 18px var(--ex-shadow);
+    }
+    .ex-exam-title { display: none; }
+    .ex-toolbar {
+      overflow-x: auto;
+      scrollbar-width: none;
+      gap: 10px;
+    }
+    .ex-toolbar::-webkit-scrollbar { display: none; }
+    .ex-toolbar > * { flex-shrink: 0; }
+    .ex-toolbar-spacer { display: none; }
+    .ex-timer-wrap { font-size: 0.68rem; }
+    .ex-submit-cards { flex-direction: column; margin-top: 6vh; max-width: 92vw; }
+    .ex-submit-card + .ex-submit-card { border-left: none; border-top: 1px solid var(--ex-footer-line); }
+  }
+
   /* Small screens */
   @media (max-width: 560px) {
     .wrap { padding: 32px 20px 72px; }
@@ -987,6 +1710,10 @@
         <input type="checkbox" id="hide-set-check">
         <span>Hide set name</span>
       </label>
+      <label class="check-row">
+        <input type="checkbox" id="examplified-check">
+        <span>Examplified — take it in an ExamSoft-style interface</span>
+      </label>
     </section>
 
     <button class="btn-primary" id="start-btn" disabled>Begin</button>
@@ -1042,6 +1769,143 @@
 
 </div>
 
+<!-- ============ EXAMPLIFIED (EXAM) VIEW ============ -->
+<!-- Full-bleed, so it sits outside .wrap. Populated by renderExamQuestion(). -->
+<div class="view" id="view-exam">
+
+  <div class="ex-topbar">
+    <div class="ex-brand"><span class="ex-brand-mark">&#9670;</span>Examplified</div>
+    <div class="ex-topbar-divider"></div>
+    <div class="ex-exam-title" id="ex-exam-title"></div>
+  </div>
+
+  <div class="ex-toolbar">
+    <div class="ex-menu-wrap">
+      <button class="ex-chrome-btn ex-filter-btn" id="ex-filter-btn">FILTER <span class="ex-caret">&rsaquo;</span></button>
+      <div class="ex-menu" id="ex-filter-menu" hidden>
+        <button class="ex-menu-item" data-filter="all">All questions</button>
+        <button class="ex-menu-item" data-filter="unanswered">Unanswered only</button>
+        <button class="ex-menu-item" data-filter="flagged">Flagged only</button>
+      </div>
+    </div>
+
+    <div class="ex-menu-wrap">
+      <button class="ex-chrome-btn ex-qjump-btn" id="ex-qjump-btn">Question 1 <span class="ex-caret">&#8964;</span></button>
+      <div class="ex-menu ex-menu-scroll" id="ex-qjump-menu" hidden></div>
+    </div>
+
+    <button class="ex-flag-pill" id="ex-flag-btn">FLAG QUESTION</button>
+
+    <button class="ex-tool-btn ex-hl-icon" id="ex-hl-btn" title="Highlighter" aria-label="Highlighter">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M15.6 2.6a2 2 0 0 1 2.8 0l3 3a2 2 0 0 1 0 2.8l-8.3 8.3-5.8-5.8 8.3-8.3zM6.3 12l5.7 5.7-1.7 1.7H7.5l-1.1 1.1H3.2l-.6-1.7 3.7-6.8z"/>
+      </svg>
+    </button>
+    <button class="ex-tool-btn" id="ex-er-btn" title="Eraser" aria-label="Eraser">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14.5 3.5 21 10a1.5 1.5 0 0 1 0 2.1l-7.4 7.4H8.9L3 13.6a1.5 1.5 0 0 1 0-2.1l9.4-8a1.5 1.5 0 0 1 2.1 0z"/>
+        <path d="M7 9.5 14.5 17"/>
+      </svg>
+    </button>
+    <button class="ex-chrome-btn" id="ex-collapse-btn" title="Hide the question" aria-label="Hide the question">&rsaquo;</button>
+
+    <div class="ex-toolbar-spacer"></div>
+
+    <div class="ex-timer-wrap">
+      <span class="ex-timer-label">TIME ELAPSED</span>
+      <span class="ex-timer" id="ex-timer">00:00</span>
+    </div>
+
+    <div class="ex-toolbar-spacer"></div>
+
+    <div class="ex-menu-wrap">
+      <button class="ex-chrome-btn" id="ex-controls-btn">EXAM CONTROLS <span class="ex-caret">&#8964;</span></button>
+      <div class="ex-menu align-right" id="ex-controls-menu" hidden>
+        <button class="ex-menu-item" id="ex-hide-btn">Hide Exam</button>
+        <button class="ex-menu-item" id="ex-submit-btn">Submit Exam</button>
+        <div class="ex-menu-sep"></div>
+        <button class="ex-menu-item" id="ex-exit-btn">Exit without submitting</button>
+      </div>
+    </div>
+    <button class="ex-chrome-btn" id="ex-toolkit-btn">TOOL KIT <span class="ex-kebab">&#8942;</span></button>
+  </div>
+
+  <div class="ex-body">
+    <div class="ex-rail">
+      <button class="ex-rail-chev" id="ex-rail-up" aria-label="Scroll question list up">&#9650;</button>
+      <div class="ex-rail-scroll" id="ex-rail-scroll"></div>
+      <button class="ex-rail-chev" id="ex-rail-down" aria-label="Scroll question list down">&#9660;</button>
+    </div>
+
+    <div class="ex-content-col">
+      <div class="ex-overflow-wrap ex-menu-wrap">
+        <button class="ex-overflow" id="ex-overflow-btn" aria-label="Question options">&#8943;</button>
+        <div class="ex-menu align-right" id="ex-overflow-menu" hidden>
+          <button class="ex-menu-item" id="ex-clear-hl">Clear highlights on this question</button>
+          <button class="ex-menu-item" id="ex-clear-struck">Restore crossed-out answers</button>
+          <button class="ex-menu-item" id="ex-clear-answer">Clear my answer</button>
+        </div>
+      </div>
+
+      <div class="ex-content" id="ex-content">
+      <div class="ex-question-pane" id="ex-question-pane">
+        <div class="ex-facts" id="ex-facts" data-highlightable="facts"></div>
+        <div class="ex-question" id="ex-question" data-highlightable="question"></div>
+        <div class="ex-image" id="ex-image" hidden><img id="ex-image-img" alt="Question diagram"></div>
+      </div>
+
+      <div class="ex-answers-label" id="ex-answers-label">Answers: A - D</div>
+      <div class="ex-options" id="ex-options"></div>
+      </div>
+    </div>
+
+    <aside class="ex-toolkit" id="ex-toolkit" hidden>
+      <div class="ex-toolkit-tabs">
+        <button class="ex-toolkit-tab" data-tab="tools">TOOLS</button>
+        <button class="ex-toolkit-tab" data-tab="calculators">CALCULATORS</button>
+        <button class="ex-toolkit-tab" data-tab="notes">NOTES</button>
+      </div>
+      <div class="ex-toolkit-body" id="ex-toolkit-body"></div>
+      <button class="ex-toolkit-close" id="ex-toolkit-close">Close Toolkit</button>
+    </aside>
+  </div>
+
+  <div class="ex-footer">
+    <div class="ex-footer-left">
+      <span id="ex-count">1 OF 1 QUESTIONS</span>
+      <span class="ex-version">Study Hall version 1.0.0</span>
+    </div>
+    <div class="ex-footer-right">
+      <button class="ex-btn-prev" id="ex-prev-btn">Previous</button>
+      <button class="ex-btn-next" id="ex-next-btn">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXAM SUBMIT SCREEN ============ -->
+<div class="view" id="view-exam-submit">
+  <div class="ex-submit-strip" id="ex-submit-strip"></div>
+  <div class="ex-submit-cards">
+    <div class="ex-submit-card">
+      <h3>Return To Exam</h3>
+      <p>By clicking this button, you will be directed back to the exam.</p>
+      <button class="ex-submit-btn" id="ex-goback-btn">Go Back</button>
+    </div>
+    <div class="ex-submit-card">
+      <h3>Submit Exam</h3>
+      <p>By submitting the exam, you will not be able to return to the exam.</p>
+      <label class="ex-submit-confirm">
+        <input type="checkbox" id="ex-confirm-check">
+        <span>I confirm that I have completed my exam.</span>
+      </label>
+      <button class="ex-submit-btn go" id="ex-final-submit-btn" disabled>Submit Exam</button>
+    </div>
+  </div>
+  <div class="ex-submit-foot"><span>Study Hall — practice mode</span></div>
+</div>
+
+<div class="ex-hide-overlay" id="ex-hide-overlay" hidden>Exam hidden — click anywhere to resume</div>
+
 <script>
 // ============================================
 // Config
@@ -1071,6 +1935,20 @@ const state = {
   timerInterval: null,
   finalTime: 0,
   flags: {},
+
+  // --- Examplified (exam) mode ---
+  // Everything below is keyed by index into state.activeQuestions rather than
+  // pushed in order, because exam mode allows free navigation and revising.
+  examplified: false,
+  examResponses: {},  // { [i]: 'A'|'B'|'C'|'D' }
+  examStruck: {},     // { [i]: ['B','D'] }  crossed-out choices
+  examNotes: {},      // { [i]: 'note text' }
+  examMarked: {},     // { [i]: true }       flagged for review
+  examHighlights: {}, // { [i]: { facts: [[s,e],…], question: [[s,e],…] } }
+  examTool: 'none',   // 'none' | 'highlight' | 'erase'
+  examToolkit: null,  // null (closed) | 'tools' | 'calculators' | 'notes'
+  examToolkitLast: 'notes',
+  examFilter: 'all',  // 'all' | 'unanswered' | 'flagged'
 };
 
 let setIdCounter = 0;
@@ -1234,8 +2112,11 @@ function formatTime(ms) {
 function updateTimerDisplay() {
   if (!state.timerStart) return;
   const elapsed = Date.now() - state.timerStart;
+  const text = formatTime(elapsed);
   const el = $('timer-display');
-  if (el) el.textContent = formatTime(elapsed);
+  if (el) el.textContent = text;
+  const ex = $('ex-timer');
+  if (ex) ex.textContent = text;
 }
 
 function startTimer() {
@@ -1442,6 +2323,21 @@ document.querySelectorAll('input[name="mode"]').forEach(el => {
 $('shuffle-check').addEventListener('change', (e) => { state.shuffle = e.target.checked; });
 $('hide-set-check').addEventListener('change', (e) => { state.hideSetName = e.target.checked; });
 
+// Examplified mode always reviews at the end — ExamSoft has no per-question
+// feedback — so checking it takes the review-mode radios out of play.
+function applyExamplified(on) {
+  state.examplified = on;
+  $('examplified-check').checked = on;
+  document.querySelectorAll('input[name="mode"]').forEach(el => { el.disabled = on; });
+  document.querySelector('.radio-group').style.opacity = on ? '0.45' : '';
+  if (on) state.mode = 'end';
+  else state.mode = document.querySelector('input[name="mode"]:checked').value;
+}
+$('examplified-check').addEventListener('change', (e) => {
+  applyExamplified(e.target.checked);
+  try { localStorage.setItem('examplified', e.target.checked ? '1' : '0'); } catch (err) {}
+});
+
 $('limit-input').addEventListener('input', (e) => {
   const v = parseInt(e.target.value, 10);
   state.targetCount = (!isNaN(v) && v > 0) ? v : null;
@@ -1487,8 +2383,12 @@ $('start-btn').addEventListener('click', () => {
   state.cursor = 0;
   state.answers = [];
   state.flags = {};
-  renderQuestion();
-  showView('quiz');
+  if (state.examplified) {
+    startExam();
+  } else {
+    renderQuestion();
+    showView('quiz');
+  }
   startTimer();
 });
 
@@ -1688,10 +2588,612 @@ $('action-btn').addEventListener('click', () => {
   else advance();
 });
 
+// ============================================
+// Examplified mode
+// ============================================
+// A reproduction of the ExamSoft/Examplify exam UI. Runs in its own view with
+// its own state (state.exam*), keyed by question index so the taker can move
+// freely and revise. On submit it converts those responses into the normal
+// state.answers shape and hands off to showResults().
+
+const EX_LETTERS = ['A', 'B', 'C', 'D'];
+
+function startExam() {
+  state.examResponses = {};
+  state.examStruck = {};
+  state.examNotes = {};
+  state.examMarked = {};
+  state.examHighlights = {};
+  state.examTool = 'none';
+  state.examToolkit = null;
+  state.examFilter = 'all';
+  state.cursor = 0;
+
+  document.body.classList.add('exam-mode');
+
+  const names = [...new Set(state.activeQuestions.map(q => q.setName).filter(Boolean))];
+  const total = state.activeQuestions.length;
+  $('ex-exam-title').textContent =
+    `${names.join(', ') || 'Practice exam'} — ${total} question${total === 1 ? '' : 's'}`;
+  $('ex-submit-strip').textContent = `Exam: ${names.join(', ') || 'Practice exam'}, Questions: ${total}`;
+
+  $('ex-question-pane').hidden = false;
+  $('ex-collapse-btn').innerHTML = '&rsaquo;';
+  $('ex-confirm-check').checked = false;
+  $('ex-final-submit-btn').disabled = true;
+  closeExamMenus();
+  syncExamToolButtons();
+  applyToolkit();
+  renderExamQuestion();
+  showView('exam');
+}
+
+function leaveExamMode() {
+  document.body.classList.remove('exam-mode');
+  $('ex-hide-overlay').hidden = true;
+  closeExamMenus();
+}
+
+// --- Navigation -----------------------------------------------------------
+
+function gotoExamQuestion(i) {
+  const total = state.activeQuestions.length;
+  if (i < 0 || i >= total || i === state.cursor) return;
+  saveExamNotes();
+  state.cursor = i;
+  renderExamQuestion();
+  $('ex-content').scrollTop = 0;
+}
+
+function renderExamQuestion() {
+  const q = state.activeQuestions[state.cursor];
+  const i = state.cursor;
+  const total = state.activeQuestions.length;
+
+  const caret = document.createElement('span');
+  caret.className = 'ex-caret';
+  caret.textContent = '⌄';
+  $('ex-qjump-btn').replaceChildren(document.createTextNode(`Question ${i + 1} `), caret);
+
+  const flagged = !!state.examMarked[i];
+  const flagBtn = $('ex-flag-btn');
+  flagBtn.textContent = flagged ? 'UNFLAG QUESTION' : 'FLAG QUESTION';
+  flagBtn.classList.toggle('flagged', flagged);
+
+  paintHighlightable('facts');
+  paintHighlightable('question');
+
+  const imgWrap = $('ex-image');
+  if (q.image) {
+    $('ex-image-img').src = resolveAssetUrl(q.image);
+    imgWrap.hidden = false;
+  } else {
+    $('ex-image-img').src = '';
+    imgWrap.hidden = true;
+  }
+
+  $('ex-answers-label').textContent = `Answers: ${EX_LETTERS[0]} - ${EX_LETTERS[EX_LETTERS.length - 1]}`;
+  renderExamOptions();
+
+  $('ex-count').textContent = `${i + 1} of ${total} questions`;
+  $('ex-prev-btn').hidden = i === 0;
+
+  renderExamRail();
+  if (state.examToolkit) renderToolkitBody();
+}
+
+function renderExamOptions() {
+  const q = state.activeQuestions[state.cursor];
+  const i = state.cursor;
+  const struck = state.examStruck[i] || [];
+  const wrap = $('ex-options');
+  wrap.innerHTML = '';
+
+  EX_LETTERS.forEach(letter => {
+    const selected = state.examResponses[i] === letter;
+    // The whole row is the click target. It can't be a <button> because the
+    // eye control nests inside it, so it takes the button role by hand.
+    const row = document.createElement('div');
+    row.className = 'ex-option';
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-pressed', String(selected));
+    row.setAttribute('aria-label', `Answer ${letter}: ${q.options[letter]}`);
+    if (selected) row.classList.add('selected');
+    if (struck.includes(letter)) row.classList.add('struck');
+    row.addEventListener('click', () => toggleExamAnswer(letter));
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExamAnswer(letter); }
+    });
+
+    const letterEl = document.createElement('span');
+    letterEl.className = 'ex-option-letter';
+    letterEl.textContent = letter;
+
+    const text = document.createElement('span');
+    text.className = 'ex-option-text';
+    text.textContent = q.options[letter];
+
+    const eye = document.createElement('button');
+    eye.className = 'ex-option-eye';
+    eye.title = struck.includes(letter) ? 'Uncross this answer' : 'Cross out this answer';
+    eye.setAttribute('aria-label', eye.title);
+    eye.innerHTML = struck.includes(letter)
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A9.8 9.8 0 0 1 12 5c5 0 9 4.5 9 7a12 12 0 0 1-2.4 3.3M6.2 7.4C4 8.9 3 11 3 12c0 2.5 4 7 9 7a9.6 9.6 0 0 0 4-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 12s3.6-7 9-7 9 7 9 7-3.6 7-9 7-9-7-9-7z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+    eye.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't let crossing out also select the row
+      toggleExamStrike(letter);
+    });
+
+    row.append(letterEl, text, eye);
+    wrap.appendChild(row);
+  });
+}
+
+function toggleExamAnswer(letter) {
+  const i = state.cursor;
+  if (state.examResponses[i] === letter) delete state.examResponses[i];
+  else {
+    state.examResponses[i] = letter;
+    // Choosing an answer you'd crossed out uncrosses it.
+    const struck = state.examStruck[i];
+    if (struck && struck.includes(letter)) {
+      state.examStruck[i] = struck.filter(l => l !== letter);
+    }
+  }
+  renderExamOptions();
+  renderExamRail();
+}
+
+function toggleExamStrike(letter) {
+  const i = state.cursor;
+  const struck = state.examStruck[i] || [];
+  if (struck.includes(letter)) {
+    state.examStruck[i] = struck.filter(l => l !== letter);
+  } else {
+    state.examStruck[i] = [...struck, letter];
+    if (state.examResponses[i] === letter) delete state.examResponses[i];
+  }
+  renderExamOptions();
+  renderExamRail();
+}
+
+function examQuestionMatchesFilter(i) {
+  if (state.examFilter === 'unanswered') return !state.examResponses[i];
+  if (state.examFilter === 'flagged') return !!state.examMarked[i];
+  return true;
+}
+
+function renderExamRail() {
+  const scroll = $('ex-rail-scroll');
+  scroll.innerHTML = '';
+  state.activeQuestions.forEach((_, i) => {
+    if (i !== state.cursor && !examQuestionMatchesFilter(i)) return;
+    const btn = document.createElement('button');
+    btn.className = 'ex-rail-num';
+    if (i === state.cursor) btn.classList.add('current');
+    if (state.examResponses[i]) btn.classList.add('answered');
+    btn.textContent = String(i + 1);
+    btn.setAttribute('aria-label', `Go to question ${i + 1}`);
+    if (state.examMarked[i]) {
+      const flag = document.createElement('span');
+      flag.className = 'ex-rail-flag';
+      flag.textContent = '⚑';
+      btn.appendChild(flag);
+    }
+    btn.addEventListener('click', () => gotoExamQuestion(i));
+    scroll.appendChild(btn);
+  });
+  const cur = scroll.querySelector('.current');
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+
+// --- Highlighting ---------------------------------------------------------
+// Ranges are stored as character offsets into the question's plain text, so
+// they survive re-rendering. Painting builds <mark> elements segment by
+// segment with textContent — never innerHTML — keeping the XSS rule intact.
+
+function examHlStore() {
+  if (!state.examHighlights[state.cursor]) state.examHighlights[state.cursor] = {};
+  return state.examHighlights[state.cursor];
+}
+
+function mergeRanges(list) {
+  const sorted = list.filter(r => r[1] > r[0]).sort((a, b) => a[0] - b[0]);
+  const out = [];
+  sorted.forEach(([s, e]) => {
+    const last = out[out.length - 1];
+    if (last && s <= last[1]) last[1] = Math.max(last[1], e);
+    else out.push([s, e]);
+  });
+  return out;
+}
+
+function subtractRange(list, [cs, ce]) {
+  const out = [];
+  list.forEach(([s, e]) => {
+    if (ce <= s || cs >= e) { out.push([s, e]); return; }
+    if (cs > s) out.push([s, cs]);
+    if (ce < e) out.push([ce, e]);
+  });
+  return out.filter(r => r[1] > r[0]);
+}
+
+function charOffsetOf(root, node, offset) {
+  const r = document.createRange();
+  r.selectNodeContents(root);
+  r.setEnd(node, offset);
+  return r.toString().length;
+}
+
+function renderHighlightable(el, text, ranges) {
+  el.textContent = '';
+  if (!text) return;
+  let pos = 0;
+  mergeRanges(ranges || []).forEach(([s, e]) => {
+    const start = Math.max(pos, Math.min(s, text.length));
+    const end = Math.max(start, Math.min(e, text.length));
+    if (end <= start) return;
+    if (start > pos) el.appendChild(document.createTextNode(text.slice(pos, start)));
+    const mark = document.createElement('mark');
+    mark.className = 'ex-hl';
+    mark.textContent = text.slice(start, end);
+    el.appendChild(mark);
+    pos = end;
+  });
+  if (pos < text.length) el.appendChild(document.createTextNode(text.slice(pos)));
+}
+
+function paintHighlightable(field) {
+  const q = state.activeQuestions[state.cursor];
+  const text = field === 'facts' ? (q.facts || '') : q.question;
+  renderHighlightable($(field === 'facts' ? 'ex-facts' : 'ex-question'), text, examHlStore()[field]);
+}
+
+function setExamTool(tool) {
+  state.examTool = state.examTool === tool ? 'none' : tool;
+  syncExamToolButtons();
+  if (state.examToolkit === 'tools') renderToolkitBody();
+}
+
+function syncExamToolButtons() {
+  $('ex-hl-btn').classList.toggle('active', state.examTool === 'highlight');
+  $('ex-er-btn').classList.toggle('active', state.examTool === 'erase');
+  const content = $('ex-content');
+  content.classList.toggle('tool-highlight', state.examTool === 'highlight');
+  content.classList.toggle('tool-erase', state.examTool === 'erase');
+}
+
+$('ex-content').addEventListener('mouseup', () => {
+  if (state.examTool === 'none') return;
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const anchor = range.commonAncestorContainer;
+  const host = (anchor.nodeType === 1 ? anchor : anchor.parentElement)?.closest('[data-highlightable]');
+  if (!host) return;
+  const field = host.dataset.highlightable;
+  const start = charOffsetOf(host, range.startContainer, range.startOffset);
+  const end = charOffsetOf(host, range.endContainer, range.endOffset);
+  if (end <= start) return;
+  const store = examHlStore();
+  store[field] = state.examTool === 'highlight'
+    ? mergeRanges([...(store[field] || []), [start, end]])
+    : subtractRange(store[field] || [], [start, end]);
+  sel.removeAllRanges();
+  paintHighlightable(field);
+});
+
+// --- Tool Kit -------------------------------------------------------------
+
+function saveExamNotes() {
+  const box = document.getElementById('ex-notes');
+  if (box) state.examNotes[state.cursor] = box.value;
+}
+
+function applyToolkit() {
+  const open = !!state.examToolkit;
+  $('ex-toolkit').hidden = !open;
+  document.querySelectorAll('.ex-toolkit-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === state.examToolkit);
+  });
+  if (open) renderToolkitBody();
+}
+
+function openToolkit(tab) {
+  saveExamNotes();
+  state.examToolkit = tab;
+  state.examToolkitLast = tab;
+  applyToolkit();
+  if (tab === 'notes') {
+    const box = document.getElementById('ex-notes');
+    if (box) box.focus();
+  }
+}
+
+function renderToolkitBody() {
+  const body = $('ex-toolkit-body');
+  body.innerHTML = '';
+  if (state.examToolkit === 'notes') {
+    const box = document.createElement('textarea');
+    box.className = 'ex-notes';
+    box.id = 'ex-notes';
+    box.placeholder = `Question #${state.cursor + 1} notes...`;
+    box.value = state.examNotes[state.cursor] || '';
+    box.addEventListener('input', () => { state.examNotes[state.cursor] = box.value; });
+    body.appendChild(box);
+  } else if (state.examToolkit === 'tools') {
+    body.appendChild(buildToolRow('Highlighter', state.examTool === 'highlight', () => setExamTool('highlight')));
+    body.appendChild(buildToolRow('Eraser', state.examTool === 'erase', () => setExamTool('erase')));
+    body.appendChild(buildToolRow('Clear highlights on this question', false, clearExamHighlights));
+    body.appendChild(buildToolRow('Restore crossed-out answers', false, clearExamStrikes));
+  } else if (state.examToolkit === 'calculators') {
+    buildCalculator(body);
+  }
+}
+
+function buildToolRow(label, active, onClick) {
+  const btn = document.createElement('button');
+  btn.className = 'ex-tool-row' + (active ? ' active' : '');
+  btn.textContent = label;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+
+const calc = { display: '0', acc: null, op: null, fresh: true };
+
+function buildCalculator(host) {
+  const screen = document.createElement('div');
+  screen.className = 'ex-calc-display';
+  screen.textContent = calc.display;
+  host.appendChild(screen);
+
+  const grid = document.createElement('div');
+  grid.className = 'ex-calc-grid';
+  const keys = ['C', '±', '%', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+', '0', '.', '=', ''];
+  keys.forEach(k => {
+    if (!k) { grid.appendChild(document.createElement('span')); return; }
+    const b = document.createElement('button');
+    b.textContent = k;
+    if ('C±%÷×−+='.includes(k)) b.className = 'op';
+    b.addEventListener('click', () => { calcPress(k); screen.textContent = calc.display; });
+    grid.appendChild(b);
+  });
+  host.appendChild(grid);
+}
+
+function calcPress(k) {
+  const apply = (a, b, op) => {
+    if (op === '+') return a + b;
+    if (op === '−') return a - b;
+    if (op === '×') return a * b;
+    if (op === '÷') return b === 0 ? NaN : a / b;
+    return b;
+  };
+  const show = (n) => {
+    if (!isFinite(n)) return 'Error';
+    return String(Math.round(n * 1e10) / 1e10);
+  };
+
+  if (k === 'C') { calc.display = '0'; calc.acc = null; calc.op = null; calc.fresh = true; return; }
+  if (k === '±') { calc.display = calc.display.startsWith('-') ? calc.display.slice(1) : '-' + calc.display; return; }
+  if (k === '%') { calc.display = show(parseFloat(calc.display) / 100); calc.fresh = true; return; }
+  if (k === '.') {
+    if (calc.fresh) { calc.display = '0.'; calc.fresh = false; }
+    else if (!calc.display.includes('.')) calc.display += '.';
+    return;
+  }
+  if ('0123456789'.includes(k)) {
+    if (calc.fresh || calc.display === '0') { calc.display = k; calc.fresh = false; }
+    else calc.display += k;
+    return;
+  }
+  const value = parseFloat(calc.display) || 0;
+  if (k === '=') {
+    if (calc.op !== null && calc.acc !== null) calc.display = show(apply(calc.acc, value, calc.op));
+    calc.acc = null; calc.op = null; calc.fresh = true;
+    return;
+  }
+  // an operator
+  if (calc.op !== null && calc.acc !== null && !calc.fresh) {
+    calc.acc = apply(calc.acc, value, calc.op);
+    calc.display = show(calc.acc);
+  } else {
+    calc.acc = value;
+  }
+  calc.op = k;
+  calc.fresh = true;
+}
+
+function clearExamHighlights() {
+  state.examHighlights[state.cursor] = {};
+  paintHighlightable('facts');
+  paintHighlightable('question');
+  if (state.examToolkit) renderToolkitBody();
+  closeExamMenus();
+}
+
+function clearExamStrikes() {
+  delete state.examStruck[state.cursor];
+  renderExamOptions();
+  if (state.examToolkit) renderToolkitBody();
+  closeExamMenus();
+}
+
+// --- Chrome: menus, toolbar, footer ---------------------------------------
+
+const EX_MENUS = [
+  ['ex-filter-btn', 'ex-filter-menu'],
+  ['ex-qjump-btn', 'ex-qjump-menu'],
+  ['ex-controls-btn', 'ex-controls-menu'],
+  ['ex-overflow-btn', 'ex-overflow-menu'],
+];
+
+function closeExamMenus() {
+  EX_MENUS.forEach(([, menuId]) => { $(menuId).hidden = true; });
+}
+
+EX_MENUS.forEach(([btnId, menuId]) => {
+  $(btnId).addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = !$(menuId).hidden;
+    closeExamMenus();
+    if (wasOpen) return;
+    if (menuId === 'ex-qjump-menu') buildQuestionJumpMenu();
+    $(menuId).hidden = false;
+  });
+});
+document.addEventListener('click', () => {
+  if ($('view-exam').classList.contains('active')) closeExamMenus();
+});
+$('view-exam').addEventListener('click', (e) => {
+  if (e.target.closest('.ex-menu')) e.stopPropagation();
+});
+
+function buildQuestionJumpMenu() {
+  const menu = $('ex-qjump-menu');
+  menu.innerHTML = '';
+  state.activeQuestions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ex-menu-item' + (i === state.cursor ? ' current' : '');
+    const marks = [
+      state.examResponses[i] ? state.examResponses[i] : null,
+      state.examMarked[i] ? '⚑' : null,
+    ].filter(Boolean).join(' ');
+    btn.textContent = `Question ${i + 1}${marks ? '   ' + marks : ''}`;
+    btn.addEventListener('click', () => { closeExamMenus(); gotoExamQuestion(i); });
+    menu.appendChild(btn);
+  });
+}
+
+$('ex-filter-menu').querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.examFilter = btn.dataset.filter;
+    closeExamMenus();
+    renderExamRail();
+  });
+});
+
+$('ex-flag-btn').addEventListener('click', () => {
+  const i = state.cursor;
+  if (state.examMarked[i]) delete state.examMarked[i];
+  else state.examMarked[i] = true;
+  const flagged = !!state.examMarked[i];
+  $('ex-flag-btn').textContent = flagged ? 'UNFLAG QUESTION' : 'FLAG QUESTION';
+  $('ex-flag-btn').classList.toggle('flagged', flagged);
+  renderExamRail();
+});
+
+$('ex-hl-btn').addEventListener('click', () => setExamTool('highlight'));
+$('ex-er-btn').addEventListener('click', () => setExamTool('erase'));
+
+$('ex-collapse-btn').addEventListener('click', () => {
+  const pane = $('ex-question-pane');
+  pane.hidden = !pane.hidden;
+  $('ex-collapse-btn').innerHTML = pane.hidden ? '&lsaquo;' : '&rsaquo;';
+  $('ex-collapse-btn').title = pane.hidden ? 'Show the question' : 'Hide the question';
+});
+
+$('ex-toolkit-btn').addEventListener('click', () => {
+  if (state.examToolkit) { saveExamNotes(); state.examToolkit = null; applyToolkit(); }
+  else openToolkit(state.examToolkitLast);
+});
+$('ex-toolkit-close').addEventListener('click', () => {
+  saveExamNotes();
+  state.examToolkit = null;
+  applyToolkit();
+});
+document.querySelectorAll('.ex-toolkit-tab').forEach(tab => {
+  tab.addEventListener('click', () => openToolkit(tab.dataset.tab));
+});
+
+$('ex-rail-up').addEventListener('click', () => { $('ex-rail-scroll').scrollBy({ top: -140, behavior: 'smooth' }); });
+$('ex-rail-down').addEventListener('click', () => { $('ex-rail-scroll').scrollBy({ top: 140, behavior: 'smooth' }); });
+
+$('ex-clear-hl').addEventListener('click', clearExamHighlights);
+$('ex-clear-struck').addEventListener('click', clearExamStrikes);
+$('ex-clear-answer').addEventListener('click', () => {
+  delete state.examResponses[state.cursor];
+  renderExamOptions();
+  renderExamRail();
+  closeExamMenus();
+});
+
+$('ex-prev-btn').addEventListener('click', () => gotoExamQuestion(state.cursor - 1));
+$('ex-next-btn').addEventListener('click', () => {
+  if (state.cursor === state.activeQuestions.length - 1) openExamSubmit();
+  else gotoExamQuestion(state.cursor + 1);
+});
+
+$('ex-hide-btn').addEventListener('click', () => {
+  closeExamMenus();
+  $('ex-hide-overlay').hidden = false;
+});
+$('ex-hide-overlay').addEventListener('click', () => { $('ex-hide-overlay').hidden = true; });
+
+$('ex-submit-btn').addEventListener('click', openExamSubmit);
+
+// Not in ExamSoft — a locked-down exam has no way out — but a study tool needs one.
+$('ex-exit-btn').addEventListener('click', () => {
+  closeExamMenus();
+  if (!confirm('Leave this exam without submitting? Your answers will be discarded.')) return;
+  stopTimer();
+  leaveExamMode();
+  showView('start');
+});
+
+// --- Submit ---------------------------------------------------------------
+
+function openExamSubmit() {
+  saveExamNotes();
+  closeExamMenus();
+  $('ex-confirm-check').checked = false;
+  $('ex-final-submit-btn').disabled = true;
+  showView('exam-submit');
+}
+
+$('ex-goback-btn').addEventListener('click', () => showView('exam'));
+$('ex-confirm-check').addEventListener('change', (e) => {
+  $('ex-final-submit-btn').disabled = !e.target.checked;
+});
+$('ex-final-submit-btn').addEventListener('click', finishExam);
+
+function finishExam() {
+  leaveExamMode();
+  state.answers = state.activeQuestions.map((q, i) => {
+    const selected = state.examResponses[i] || null;
+    return {
+      question: q.question,
+      options: q.options,
+      selected,
+      correctLetter: q.answer,
+      correct: selected === q.answer,
+      explanation: q.explanation,
+      facts: q.facts,
+      image: q.image,
+      setName: q.setName,
+    };
+  });
+  showResults();
+}
+
 document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+  // Examplified mode: A–D select, arrows navigate. No Enter-to-confirm and no
+  // on-screen hint — Examplify shows neither.
+  if ($('view-exam').classList.contains('active')) {
+    const key = e.key.toUpperCase();
+    if (EX_LETTERS.includes(key)) { e.preventDefault(); toggleExamAnswer(key); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); gotoExamQuestion(state.cursor - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); gotoExamQuestion(state.cursor + 1); }
+    else if (e.key === 'Escape') closeExamMenus();
+    return;
+  }
+
   const quizActive = $('view-quiz').classList.contains('active');
   if (!quizActive) return;
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
   const k = e.key.toUpperCase();
   if (['A', 'B', 'C', 'D'].includes(k)) {
@@ -1824,8 +3326,12 @@ $('restart-btn').addEventListener('click', () => {
   state.cursor = 0;
   state.answers = [];
   state.flags = {};
-  renderQuestion();
-  showView('quiz');
+  if (state.examplified) {
+    startExam();
+  } else {
+    renderQuestion();
+    showView('quiz');
+  }
   startTimer();
 });
 $('home-btn').addEventListener('click', () => showView('start'));
@@ -1847,6 +3353,9 @@ $('theme-toggle').addEventListener('click', () => {
 // ============================================
 // Init
 // ============================================
+try {
+  if (localStorage.getItem('examplified') === '1') applyExamplified(true);
+} catch (e) {}
 renderSetList();
 </script>
 </body>
