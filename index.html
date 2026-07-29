@@ -940,7 +940,9 @@
     position: fixed;
     inset: 0;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     background: var(--ex-canvas);
+    overflow: hidden;
     z-index: 50;
   }
 
@@ -954,6 +956,11 @@
     padding: 0 16px;
     height: 38px;
     font-size: 0.74rem;
+    /* Grid items get an automatic min-width of min-content; without these the
+       title's text can push this row — and the whole fixed view — wider than
+       the viewport instead of ellipsising. */
+    min-width: 0;
+    overflow: hidden;
   }
   .ex-brand {
     display: flex;
@@ -1922,6 +1929,7 @@ function resolveAssetUrl(path) {
 // ============================================
 const state = {
   sets: [],           // [{id, name, questions, enabled}, ...]
+  code: '',           // the set code the user typed (used as the exam title)
   mode: 'end',
   shuffle: false,
   hideSetName: false,
@@ -2152,6 +2160,9 @@ async function applyCode(rawCode) {
   const code = (rawCode || '').trim().toLowerCase();
   const status = $('code-status');
   status.classList.remove('error');
+  // Keep the code as typed for display (codes are case-insensitive, so the
+  // lookup uses the lowercased form).
+  state.code = (rawCode || '').trim();
 
   if (!code) {
     status.textContent = '';
@@ -2611,11 +2622,14 @@ function startExam() {
 
   document.body.classList.add('exam-mode');
 
-  const names = [...new Set(state.activeQuestions.map(q => q.setName).filter(Boolean))];
+  // Title is the code the taker typed, not the set names — with many sets
+  // selected the joined names ran past the viewport and dragged the whole
+  // fixed layout wide (Next button, TOOL KIT, etc. scrolled off-screen).
+  const label = state.code || 'Practice exam';
   const total = state.activeQuestions.length;
   $('ex-exam-title').textContent =
-    `${names.join(', ') || 'Practice exam'} — ${total} question${total === 1 ? '' : 's'}`;
-  $('ex-submit-strip').textContent = `Exam: ${names.join(', ') || 'Practice exam'}, Questions: ${total}`;
+    `${label} — ${total} question${total === 1 ? '' : 's'}`;
+  $('ex-submit-strip').textContent = `Exam: ${label}, Questions: ${total}`;
 
   $('ex-question-pane').hidden = false;
   $('ex-collapse-btn').innerHTML = '&rsaquo;';
